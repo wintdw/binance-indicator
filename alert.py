@@ -61,10 +61,10 @@ class Alert():
       send = True
       text = text + "\n" + timep + " Overbought -> Sell!"
     #self.bot.sendPhoto(CHAT_ID, photo=open(image, 'rb'), caption=text)
-    if mfi_divconv == 11:
-      send = True
-      text = text + "\n" + timep + " Peak Conv!"
-    elif mfi_divconv == 12:
+    #if mfi_divconv == 11:
+    #  send = True
+    #  text = text + "\n" + timep + " Peak Conv!"
+    if mfi_divconv == 12:
       send = True
       text = text + "\n" + timep + " Peak Div -> Sell!"
     if send:
