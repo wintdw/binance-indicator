@@ -60,7 +60,7 @@ class Alert():
     now = datetime.now().strftime('%s')
     if (int(now) - int(mtime)) >= 180:   # 3mins delay
       self.bot.sendMessage(self.chatid, text)
-      os.utime(lockfile, (now, now))
+      os.utime(lockfile)
 
   def notify(self, symbol, timep, ind, data, pd, threshold=70):
     send = False
