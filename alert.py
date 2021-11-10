@@ -1,11 +1,15 @@
 import telepot
 import yaml
+import os
+from datetime import datetime
 
 class Alert():
   def __init__(self):  
     token = ""
+    cred = "/etc/binance/telegram.yaml"
+    self.lockfile = "/etc/binance/"
     self.chatid = ""
-    with open("/etc/binance/telegram.yaml") as f:
+    with open(cred) as f:
       y = yaml.safe_load(f)
       token = y["TOKEN"]
       self.chatid = y["CHATID"]
@@ -46,6 +50,18 @@ class Alert():
     else:
       return 0
 
+  def sendMsg(self, text, msg_type, symbol, timep):
+    lockfile = "{}{}{}_{}".format(self.lockfile, symbol, timep, msg_type)
+    if not os.path.exists(lockfile):
+      self.bot.sendMessage(self.chatid, text)
+      open(lockfile, 'a').close()
+      return
+    mtime = os.path.getmtime(lockfile)
+    now = datetime.now().strftime('%s')
+    if (int(now) - int(mtime)) >= 180:   # 3mins delay
+      self.bot.sendMessage(self.chatid, text)
+      os.utime(lockfile, (now, now))
+
   def notify(self, symbol, timep, ind, data, pd, threshold=70):
     send = False
     text = "[{}]\nPrice: {:.2f} [{:.2f}]\nMFI: {:.2f}".format(symbol, data["close"][-1], ind["ema"][-1], ind["mfi"][-1])
@@ -54,18 +70,23 @@ class Alert():
     mfi_divconv = self.mfi_div_conv(data, pd, ind)
     ema = self.ema(ind, data)
 
-    if mfi == 2 and ema == 1:
+    if mfi == 2:
       send = True
-      text = text + "\n" + timep + " Oversold -> Buy!"
-    if mfi == 1 and ema == 2:
+      msg_type = "mfi"
+      text = text + "\n" + timep + " Oversold!"
+    if mfi == 1:
       send = True
-      text = text + "\n" + timep + " Overbought -> Sell!"
+      msg_type = "mfi"
+      text = text + "\n" + timep + " Overbought!"
     #self.bot.sendPhoto(CHAT_ID, photo=open(image, 'rb'), caption=text)
-    #if mfi_divconv == 11:
-    #  send = True
-    #  text = text + "\n" + timep + " Peak Conv!"
-    if mfi_divconv == 12:
+    if mfi_divconv == 22 and ema == 1:
       send = True
-      text = text + "\n" + timep + " Peak Div -> Sell!"
+      msg_type = "mfi_divconv"
+      text = text + "\n" + timep + " Div Conv -> Buy!"
+    elif mfi_divconv == 12:
+      send = True
+      msg_type = "mfi_divconv"
+      text = text + "\n" + timep + " Peak Div!"
     if send:
-      self.bot.sendMessage(self.chatid, text)
+      self.sendMsg(text, msg_type, symbol, timep)
+      #self.bot.sendMessage(self.chatid, text)

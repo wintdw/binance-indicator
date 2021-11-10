@@ -26,4 +26,4 @@ if __name__ == "__main__":
   data = indicator.gather_data(infodict, timep)
   pd = graph.draw(data, ind, ticker, timep)
 
-  noti.notify(ticker, timep, ind, data, pd, threshold=70)
+  noti.notify(ticker, timep, ind, data, pd, threshold=20)
