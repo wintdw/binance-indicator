@@ -15,6 +15,15 @@ class Alert():
       self.chatid = y["CHATID"]
     self.bot = telepot.Bot(token)
 
+  # 1% near the SRs
+  # 1: Near SR
+  # 0: Not
+  def sr(self, data, pd, accuracy=0.001):
+    for i in pd["SRs"]:
+      if data["close"][-1] <= data["close"][i]*(1+accuracy) and data["close"][-1] >= data["close"][i]*(1-accuracy):
+        return (1, data["close"][i])
+    return (0, data["close"][pd["SRs"][-1]])
+
   # 1: Higher than EMA_100
   # 2: Lower than EMA_100
   def ema(self, ind, data):
@@ -64,11 +73,12 @@ class Alert():
 
   def notify(self, symbol, timep, ind, data, pd, threshold=70):
     send = False
-    text = "[{}]\nPrice: {:.2f} [{:.2f}]\nMFI: {:.2f}".format(symbol, data["close"][-1], ind["ema"][-1], ind["mfi"][-1])
+    text = "[{}]\nPrice: {:.2f} [{:.2f} - {:.2f}]\nMFI: {:.2f}".format(symbol, data["close"][-1], ind["ema"][-1], data["close"][pd["SRs"][-1]], ind["mfi"][-1])
     image = "/var/itim/{}_{}.png".format(symbol, timep)
     mfi = self.mfi(ind, threshold)
     mfi_divconv = self.mfi_div_conv(data, pd, ind)
     ema = self.ema(ind, data)
+    sr_near, sr_price = self.sr(data, pd)
 
     if mfi == 2:
       send = True
@@ -87,6 +97,11 @@ class Alert():
       send = True
       msg_type = "mfi_divconv"
       text = text + "\n" + timep + " Peak Div!"
+    if sr_near == 1:
+      send = True
+      msg_type = "sr"
+      text = text + "\n" + timep + " Near SR " + str(sr_price)
     if send:
       self.sendMsg(text, msg_type, symbol, timep)
       #self.bot.sendMessage(self.chatid, text)
+    print(text)
