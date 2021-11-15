@@ -1,19 +1,7 @@
 import talib
 import numpy
 import datetime
-
-#### Thread functions
-def worker_balance(binance, infodict, coin):
-  infodict[coin] = binance.check_asset_balance(coin)
-
-def worker_symbolprice(binance, infodict, symbol):
-  infodict[symbol] =  binance.check_symbol_price(symbol)
-
-def worker_klines(binance, infodict, symbol, timeperiod):
-  timelength = "7"
-  if timeperiod in ["15m", "5m", "3m", "1m"]:
-    timelength = "2"
-  infodict["klines"+timeperiod] = binance.client.get_historical_klines(symbol, timeperiod, "{} day ago UTC".format(timelength))
+import scipy.signal
 
 def gather_data(infodict, timeperiod):
   data = {}
@@ -33,15 +21,40 @@ def gather_data(infodict, timeperiod):
   data["time"] = time_lst
   return data
 
-def calculate_indicator(infodict, timeperiod):
-  data = gather_data(infodict, timeperiod)
+# Input: data from gather_data
+def calculate_indicator(data):
   indicators = {}
   highBB, midBB, lowBB = talib.BBANDS(numpy.array(data["close"]), timeperiod=14, matype=talib.MA_Type.EMA)
   indicators["ema"] = talib.EMA(numpy.array(data["close"]), timeperiod=100).tolist()
   indicators["rsi"] = talib.RSI(numpy.array(data["close"]), timeperiod=14).tolist()
   indicators["mfi"] = talib.MFI(numpy.array(data["high"]), numpy.array(data["low"]), numpy.array(data["close"]), numpy.array(data["vol"]), timeperiod=14).tolist()
   indicators["macd"] = talib.MACD(numpy.array(data["close"]), fastperiod=12, slowperiod=26, signalperiod=9)
-  indicators["ema_vol"] = talib.EMA(numpy.array(data["vol"]), timeperiod=14)
   indicators["bb"] = (data["close"][-1] - lowBB[-1]) / (highBB[-1] - lowBB[-1])
   indicators["BB"] = [highBB, midBB, lowBB]
   return indicators
+
+def find_peakdips(data, prominence=100, toleration=0.0008):
+  peaks_i = scipy.signal.find_peaks(data["close"], prominence=prominence, distance=10)[0].tolist()
+  dips_i = scipy.signal.find_peaks([-x for x in data["close"]], prominence=prominence, distance=10)[0].tolist()
+
+  ### Find SRs according to peaks dips
+  #pd_i = [data["close"][p] for p in peaks_i] + [data["close"][d] for d in dips_i]
+  
+  cross_counts = {}
+  for i in (peaks_i + dips_i):
+    cross_counts[i] = 0
+  for i in range(0, len(data["time"])):
+    for j in (peaks_i + dips_i):
+      if data["high"][i] >= data["close"][j] and data["low"][i] <= data["close"][j]:
+        cross_counts[j] += 1
+        #print("{}+: {} {}".format(j, data["close"][j], data["low"][i]))
+      elif data["high"][i] >= data["close"][j]*(1+toleration) and data["low"][i] <= data["close"][j]*(1+toleration):
+        cross_counts[j] += 1
+      elif data["high"][i] >= data["close"][j]*(1-toleration) and data["low"][i] <= data["close"][j]*(1-toleration):
+        cross_counts[j] += 1
+  ssSR_counts = dict(sorted(cross_counts.items(), key=lambda item: item[1]))
+  ssSRs_i = list(ssSR_counts.keys())
+
+  #print(ssSR_counts)
+  #print(ssSRs_i)
+  return {"peaks": peaks_i, "dips": dips_i, "SRs": ssSRs_i}

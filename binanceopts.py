@@ -41,3 +41,19 @@ class BinanceOpts():
   def check_asset_balance(self, asset):
     info = self.client.get_asset_balance(asset=asset)
     return float(info["free"])
+
+#### Thread functions
+def worker_balance(binance, infodict, coin):
+  infodict[coin] = binance.check_asset_balance(coin)
+
+def worker_symbolprice(binance, infodict, symbol):
+  infodict[symbol] =  binance.check_symbol_price(symbol)
+
+def worker_klines(binance, infodict, symbol, timeperiod):
+  if "d" in timeperiod:
+    timelength = int(timeperiod.replace("d", "")) * 150 * 24
+  elif "h" in timeperiod:
+    timelength = int(timeperiod.replace("h", "")) * 150
+  else:
+    timelength = int(int(timeperiod.replace("m", "")) * 150 / 60)
+  infodict["klines"+timeperiod] = binance.client.get_historical_klines(symbol, timeperiod, "{} hours ago UTC".format(timelength))
