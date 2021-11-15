@@ -19,7 +19,7 @@ class Alert():
   # 1: Near SR
   # 0: Not
   def sr(self, data, pd, accuracy=0.001):
-    for i in pd["SRs"][-3:]:
+    for i in pd["SRs"][:3]:
       if data["close"][-1] <= data["close"][i]*(1+accuracy) and data["close"][-1] >= data["close"][i]*(1-accuracy):
         return (1, data["close"][i])
     return (0, data["close"][pd["SRs"][-1]])

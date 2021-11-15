@@ -54,6 +54,7 @@ def find_peakdips(data, prominence=100, accuracy=0.001):
   ssSR_counts = dict(sorted(cross_counts.items(), key=lambda item: item[1]))
   ssSRs_i = list(ssSR_counts.keys())[::-1]   # Reverse
 
+  # Remove adjacent elements
   def refine_SRs(merge=accuracy):
     deletes = []
     #print(ssSRs_i)
