@@ -15,11 +15,11 @@ class Alert():
       self.chatid = y["CHATID"]
     self.bot = telepot.Bot(token)
 
-  # 1% near the SRs
+  # 1% near the top 3 SRs
   # 1: Near SR
   # 0: Not
   def sr(self, data, pd, accuracy=0.001):
-    for i in pd["SRs"]:
+    for i in pd["SRs"][-3:]:
       if data["close"][-1] <= data["close"][i]*(1+accuracy) and data["close"][-1] >= data["close"][i]*(1-accuracy):
         return (1, data["close"][i])
     return (0, data["close"][pd["SRs"][-1]])
@@ -73,7 +73,7 @@ class Alert():
 
   def notify(self, symbol, timep, ind, data, pd, threshold=70):
     send = False
-    text = "[{}]\nPrice: {:.2f} [{:.2f} - {:.2f}]\nMFI: {:.2f}".format(symbol, data["close"][-1], ind["ema"][-1], data["close"][pd["SRs"][-1]], ind["mfi"][-1])
+    text = "[{}]\nPrice: {:.2f} [{:.2f} - {:.2f}]\nMFI: {:.2f}".format(symbol, data["close"][-1], ind["ema"][-1], data["close"][pd["SRs"][0]], ind["mfi"][-1])
     image = "/var/itim/{}_{}.png".format(symbol, timep)
     mfi = self.mfi(ind, threshold)
     mfi_divconv = self.mfi_div_conv(data, pd, ind)

@@ -5,7 +5,7 @@ from plotly.subplots import make_subplots
 from indicator import find_peakdips
 
 # get from gather_data & calculate_value
-def draw(data, ind, ticker, timep):
+def draw(data, ind, pd, ticker, timep):
   price = go.Candlestick(x=data["time"], open=data["open"], high=data["high"], low=data["low"], close=data["close"], name="Price")
   vol = go.Bar(x=data["time"], y=data["vol"], name="Volume")
   rsi = go.Scatter(x=data["time"], y=ind["rsi"], name="RSI", fillcolor="aliceblue")
@@ -16,10 +16,10 @@ def draw(data, ind, ticker, timep):
   #ema = go.Scatter(x=data["time"], y=ind["BB"][1], line=go.scatter.Line(color="yellow"))
 
   # Peaks/Dips work best for BTC ony
-  peakdips_i = find_peakdips(data, 100)
-  peaks_i = peakdips_i["peaks"][-2:]
-  dips_i = peakdips_i["dips"][-2:]
-  SRs_i = peakdips_i["SRs"][-3:]
+  #peakdips_i = find_peakdips(data, 100)
+  peaks_i = pd["peaks"][-2:]
+  dips_i = pd["dips"][-2:]
+  SRs_i = pd["SRs"][:3]
   #print(SRs_i)
 
   #peak_price = go.Scatter(x=[data["time"][j] for j in peaks], y=[data["close"][j] for j in peaks], showlegend=False, mode='markers', marker=dict(size=8, color='purple', symbol='cross'))
@@ -40,6 +40,7 @@ def draw(data, ind, ticker, timep):
 
   for i in SRs_i:
     fig.add_shape(type="line", x0=data["time"][i], y0=data["close"][i], x1=data["time"][-1], y1=data["close"][i])
+    #print(data["close"][i])
 
   fig.update_layout(xaxis_rangeslider_visible=False, width=1920, height=1080)
 

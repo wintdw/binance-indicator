@@ -33,7 +33,7 @@ def calculate_indicator(data):
   indicators["BB"] = [highBB, midBB, lowBB]
   return indicators
 
-def find_peakdips(data, prominence=100, toleration=0.0008):
+def find_peakdips(data, prominence=100, accuracy=0.001):
   peaks_i = scipy.signal.find_peaks(data["close"], prominence=prominence, distance=10)[0].tolist()
   dips_i = scipy.signal.find_peaks([-x for x in data["close"]], prominence=prominence, distance=10)[0].tolist()
 
@@ -47,14 +47,29 @@ def find_peakdips(data, prominence=100, toleration=0.0008):
     for j in (peaks_i + dips_i):
       if data["high"][i] >= data["close"][j] and data["low"][i] <= data["close"][j]:
         cross_counts[j] += 1
-        #print("{}+: {} {}".format(j, data["close"][j], data["low"][i]))
-      elif data["high"][i] >= data["close"][j]*(1+toleration) and data["low"][i] <= data["close"][j]*(1+toleration):
+      elif data["high"][i] >= data["close"][j]*(1+accuracy) and data["low"][i] <= data["close"][j]*(1+accuracy):
         cross_counts[j] += 1
-      elif data["high"][i] >= data["close"][j]*(1-toleration) and data["low"][i] <= data["close"][j]*(1-toleration):
+      elif data["high"][i] >= data["close"][j]*(1-accuracy) and data["low"][i] <= data["close"][j]*(1-accuracy):
         cross_counts[j] += 1
   ssSR_counts = dict(sorted(cross_counts.items(), key=lambda item: item[1]))
-  ssSRs_i = list(ssSR_counts.keys())
+  ssSRs_i = list(ssSR_counts.keys())[::-1]   # Reverse
+
+  def refine_SRs(merge=accuracy):
+    deletes = []
+    #print(ssSRs_i)
+    for i in range(0, len(ssSRs_i)):
+      for j in range(i+1, len(ssSRs_i)):
+        #print("{} {} {} {}".format(i, j, data["close"][i], data["close"][ssSRs_i[i]]))
+        if data["close"][ssSRs_i[i]]*(1+merge) >= data["close"][ssSRs_i[j]] and data["close"][ssSRs_i[i]]*(1-merge) <= data["close"][ssSRs_i[j]]:
+          deletes.append(ssSRs_i[j])
+          #print("Remove: {}".format(ssSRs_i[j]))
+    merge_SRs = [x for x in ssSRs_i if x not in deletes]
+    #print(merge_SRs)
+    return merge_SRs
+
+  merge_SRs = refine_SRs()
 
   #print(ssSR_counts)
-  #print(ssSRs_i)
-  return {"peaks": peaks_i, "dips": dips_i, "SRs": ssSRs_i}
+  #print(merge_SRs)
+  #return {"peaks": peaks_i, "dips": dips_i, "SRs": ssSRs_i}
+  return {"peaks": peaks_i, "dips": dips_i, "SRs": merge_SRs}

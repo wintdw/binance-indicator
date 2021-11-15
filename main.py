@@ -27,6 +27,6 @@ if __name__ == "__main__":
   pd = indicator.find_peakdips(data)
 
   # Drap graphs
-  graph.draw(data, ind, ticker, timep)
+  graph.draw(data, ind, pd, ticker, timep)
 
   noti.notify(ticker, timep, ind, data, pd, threshold=80)
