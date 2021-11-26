@@ -33,7 +33,9 @@ def calculate_indicator(data):
   indicators["BB"] = [highBB, midBB, lowBB]
   return indicators
 
-def find_peakdips(data, prominence=100, accuracy=0.001):
+# accu = 0.1%
+# BTCUSDT prominence=100
+def find_peakdips(data, prominence=None, accuracy=0.001):
   peaks_i = scipy.signal.find_peaks(data["close"], prominence=prominence, distance=10)[0].tolist()
   dips_i = scipy.signal.find_peaks([-x for x in data["close"]], prominence=prominence, distance=10)[0].tolist()
 

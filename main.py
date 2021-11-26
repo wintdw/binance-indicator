@@ -12,6 +12,12 @@ if __name__ == "__main__":
   infodict = {}
   ticker = sys.argv[1]
   timep = sys.argv[2]
+  
+  # for peakdips
+  prominence = None
+  if ticker == "BTCUSDT":
+    prominence = 100
+
 
   # Threading
   thrds = []
@@ -24,7 +30,7 @@ if __name__ == "__main__":
 
   data = indicator.gather_data(infodict, timep)
   ind = indicator.calculate_indicator(data)
-  pd = indicator.find_peakdips(data)
+  pd = indicator.find_peakdips(data, prominence)
 
   # Drap graphs
   graph.draw(data, ind, pd, ticker, timep)

@@ -2,7 +2,6 @@ import plotly.graph_objects as go
 import plotly.figure_factory
 import plotly.io as pio
 from plotly.subplots import make_subplots
-from indicator import find_peakdips
 
 # get from gather_data & calculate_value
 def draw(data, ind, pd, ticker, timep):
