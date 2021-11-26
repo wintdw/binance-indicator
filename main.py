@@ -1,5 +1,6 @@
 import datetime
 import threading
+from collections import defaultdict
 import binanceopts
 import alert
 import indicator
@@ -14,7 +15,8 @@ if __name__ == "__main__":
   timep = sys.argv[2]
   
   # for peakdips
-  prominences = {"BTCUSDT": 100, "NEARUSDT": None}
+  prominences = defaultdict(lambda: None)
+  prominences["BTCUSDT"]: 100
 
   # Threading
   thrds = []
