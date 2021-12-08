@@ -18,7 +18,7 @@ if __name__ == "__main__":
   prominences = defaultdict(lambda: None)
   prominences["BTCUSDT"]: 100
 
-  # Threading
+  ### Threading
   thrds = []
   thrds.append(threading.Thread(target=binanceopts.worker_symbolprice, args=(dwb, infodict, ticker,)))
   thrds.append(threading.Thread(target=binanceopts.worker_klines, args=(dwb, infodict, ticker, timep,)))
@@ -31,7 +31,6 @@ if __name__ == "__main__":
   ind = indicator.calculate_indicator(data)
   pd = indicator.find_peakdips(data, prominences[ticker])
 
-  # Drap graphs
   graph.draw(data, ind, pd, ticker, timep)
 
   noti.notify(ticker, timep, ind, data, pd, threshold=80)

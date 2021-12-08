@@ -59,6 +59,14 @@ class Alert():
     else:
       return 0
 
+  # 1: break
+  # 0: normal
+  def break_peak(self, data, pd):
+    latest_peak = data["close"][pd["peaks"][-1]]
+    if data["close"][-2] < latest_peak and data["close"][-1] > latest_peak:
+      return 1
+    return 0
+
   def sendMsg(self, text, msg_type, symbol, timep):
     lockfile = "{}{}{}_{}".format(self.lockfile, symbol, timep, msg_type)
     if not os.path.exists(lockfile):
@@ -79,15 +87,22 @@ class Alert():
     mfi_divconv = self.mfi_div_conv(data, pd, ind)
     ema = self.ema(ind, data)
     sr_near, sr_price = self.sr(data, pd)
+    brk = self.break_peak(data, pd)
+
+    if brk == 1:
+      send = True
+      msg_type = "break_peak"
+      text = text + "\n" + timep + " Peak Break!"
 
     if mfi == 2:
       send = True
       msg_type = "mfi"
       text = text + "\n" + timep + " Oversold!"
-    if mfi == 1:
+    elif mfi == 1:
       send = True
       msg_type = "mfi"
       text = text + "\n" + timep + " Overbought!"
+
     #self.bot.sendPhoto(CHAT_ID, photo=open(image, 'rb'), caption=text)
     if mfi_divconv == 22 and ema == 1:
       send = True
@@ -97,10 +112,12 @@ class Alert():
       send = True
       msg_type = "mfi_divconv"
       text = text + "\n" + timep + " Peak Div!"
+
     if sr_near == 1:
       send = True
       msg_type = "sr"
       text = text + "\n" + timep + " Near SR " + str(sr_price)
+
     if send:
       self.sendMsg(text, msg_type, symbol, timep)
       #self.bot.sendMessage(self.chatid, text)
